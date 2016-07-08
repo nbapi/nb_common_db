@@ -28,9 +28,5 @@
 			<attribute name="org.eclipse.jst.component.nondependency" value=""/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="E:/开发软件/Java/commons/公共常用包/java连接sqlserver2008/msbase.jar"/>
-	<classpathentry kind="lib" path="E:/开发软件/Java/commons/公共常用包/java连接sqlserver2008/mssqlserver.jar"/>
-	<classpathentry kind="lib" path="E:/开发软件/Java/commons/公共常用包/java连接sqlserver2008/msutil.jar"/>
-	<classpathentry kind="lib" path="E:/开发软件/Java/commons/公共常用包/java连接sqlserver2008/sqljdbc4.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

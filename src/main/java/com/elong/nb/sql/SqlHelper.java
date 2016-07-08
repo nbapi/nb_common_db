@@ -11,6 +11,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 import com.elong.nb.common.util.CommonsUtil;
 import com.mysql.jdbc.StringUtils;
 
@@ -29,6 +32,7 @@ import com.mysql.jdbc.StringUtils;
  * @since		JDK1.7
  */
 public class SqlHelper {
+	private static Logger LocalMsg=LogManager.getLogger(SqlHelper.class);
 	private  String filePath,sqlDriverClassName,sqlUrl,sqlUserName,sqlPassword;
 	private static String defaultFileName="conf/custom/env/jobjdbc.properties";
 	Connection _CONN=null;
@@ -82,7 +86,7 @@ public class SqlHelper {
 
 			} catch (ClassNotFoundException | SQLException e) {
 				e.printStackTrace();
-				System.out.println(e.getMessage());
+				LocalMsg.error("getConnection Exception:"+e.getMessage());
 				return false;
 			}
 		return true;
@@ -93,7 +97,7 @@ public class SqlHelper {
 			_CONN.close();
 			_CONN=null;
 		} catch (SQLException e) {
-			System.out.println(e.getMessage());
+			LocalMsg.error("closeConnection Exception:"+e.getMessage());
 		}
 	}
 	
@@ -110,8 +114,8 @@ public class SqlHelper {
 				resultSet=ps.executeQuery();
 			}
 		} catch (Exception e) {
+			LocalMsg.error("getResultSet Exception:"+e.getMessage());
 			e.printStackTrace();
-			System.out.println(e.getMessage());
 			closeConnection();
 		}
 		return resultSet;
@@ -133,8 +137,8 @@ public class SqlHelper {
 			}
 		}
 		catch(Exception e){
+			LocalMsg.error("getSingle Exception:"+e.getMessage());
 			e.printStackTrace();
-			System.out.println(e.getMessage());
 		}
 		finally {
 			closeConnection();
