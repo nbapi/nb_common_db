@@ -78,30 +78,30 @@ public class SqlHelper {
 		this.sqlPassword=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.password");
 	}
 	
-	private boolean getConnection(){
+	private boolean getConnection() throws Exception{
 		if(_CONN!=null) return true;
 			try {
 				Class.forName(sqlDriverClassName);
 				_CONN=DriverManager.getConnection(sqlUrl, sqlUserName, sqlPassword);
 
 			} catch (ClassNotFoundException | SQLException e) {
-				e.printStackTrace();
 				LocalMsg.error("getConnection Exception:"+e.getMessage());
-				return false;
+				throw new Exception(e);
 			}
 		return true;
 	}
 	
-	private void closeConnection(){
+	private void closeConnection() throws SQLException{
 		try {
 			_CONN.close();
 			_CONN=null;
 		} catch (SQLException e) {
 			LocalMsg.error("closeConnection Exception:"+e.getMessage());
+			throw new SQLException();
 		}
 	}
 	
-	public ResultSet  getResultSet(String sql,Object[] params){
+	public ResultSet  getResultSet(String sql,Object[] params) throws Exception{
 		ResultSet resultSet=null;
 		try {
 			if(getConnection()){
@@ -115,13 +115,14 @@ public class SqlHelper {
 			}
 		} catch (Exception e) {
 			LocalMsg.error("getResultSet Exception:"+e.getMessage());
-			e.printStackTrace();
 			closeConnection();
+			throw  new Exception(e);
 		}
 		return resultSet;
 	}
+
 	
-	public Object getSingle(String sql,Object... params){
+	public Object getSingle(String sql,Object... params) throws Exception{
 		try{
 			if(getConnection()){
 				PreparedStatement ps=_CONN.prepareStatement(sql);
@@ -138,7 +139,7 @@ public class SqlHelper {
 		}
 		catch(Exception e){
 			LocalMsg.error("getSingle Exception:"+e.getMessage());
-			e.printStackTrace();
+			throw new Exception(e);
 		}
 		finally {
 			closeConnection();
