@@ -84,7 +84,7 @@ public class SqlHelper {
 	}*/
 	private boolean getConnection() throws Exception{
 		if(_CONN!=null) return true;
-		synchronized (this) {
+		//synchronized (this) {
 			if(_CONN==null){
 			try {
 				/*Class.forName(sqlDriverClassName);
@@ -96,7 +96,7 @@ public class SqlHelper {
 				throw new Exception(e);
 			}
 			}
-		}
+		//}
 		return true;
 	}
 	
@@ -129,7 +129,8 @@ public class SqlHelper {
 			closeConnection();
 			throw  new Exception(e);
 		}finally {
-			
+			if(resultSet!=null)resultSet.close();
+			if(_CONN!=null) closeConnection();
 		}
 		return resultSet;
 	}
