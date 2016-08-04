@@ -6,6 +6,7 @@
 package com.elong.nb.sql;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -39,7 +40,19 @@ public class SqlHelper {
 	private static BasicDataSource basicDataSource=null;
 
 	public SqlHelper(String fileName){
-			if(basicDataSource==null){
+		this.filePath=StringUtils.isEmptyOrWhitespaceOnly(fileName)==true?defaultFileName:fileName;
+		this.sqlDriverClassName=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.driverClassName");
+		this.sqlUrl=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.url");
+		this.sqlUserName=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.username");
+		this.sqlPassword=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.password");
+		this.sqlMaxActive=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.maxactive");
+		this.sqlInitialSize=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.initialsize");
+		this.sqlMinIdle=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.minidle");
+		this.sqlMaxIdle=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.maxidle");
+		this.sqlMinEvictableIdleTimeMillis=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.minevictableidletimemillis");
+		this.sqlTimeBetweenEvictionRunsMillis=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.timebetweenevictionrunsmillis");
+		this.sqlTestOnBorrow=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.testonborrow");
+			/*if(basicDataSource==null){
 				this.filePath=StringUtils.isEmptyOrWhitespaceOnly(fileName)==true?defaultFileName:fileName;
 				this.sqlDriverClassName=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.driverClassName");
 				this.sqlUrl=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.url");
@@ -65,7 +78,7 @@ public class SqlHelper {
 				basicDataSource.setTimeBetweenEvictionRunsMillis(Long.parseLong(this.sqlTimeBetweenEvictionRunsMillis));
 				basicDataSource.setTestOnBorrow(Boolean.parseBoolean(this.sqlTestOnBorrow));
 		}
-		
+		*/
 	}
 	
 /*	private boolean getConnection() throws Exception{
@@ -84,19 +97,19 @@ public class SqlHelper {
 	}*/
 	private boolean getConnection() throws Exception{
 		if(_CONN!=null) return true;
-		//synchronized (this) {
+		synchronized (this) {
 			if(_CONN==null){
 			try {
-				/*Class.forName(sqlDriverClassName);
-				_CONN=DriverManager.getConnection(sqlUrl, sqlUserName, sqlPassword);*/
-				_CONN=basicDataSource.getConnection();
+				Class.forName(sqlDriverClassName);
+				_CONN=DriverManager.getConnection(sqlUrl, sqlUserName, sqlPassword);
+				//_CONN=basicDataSource.getConnection();
 
 			} catch (SQLException e) {
 				LocalMsg.error("getConnection Exception:"+e.getMessage());
 				throw new Exception(e);
 			}
 			}
-		//}
+		}
 		return true;
 	}
 	
