@@ -142,7 +142,7 @@ public class SqlHelper {
 	}
 
 	
-	public Object getSingle(String sql,Object... params) throws Exception{
+	public String getSingle(String sql,Object... params) throws Exception{
 		try{
 			if(getConnection()){
 				PreparedStatement ps=_CONN.prepareStatement(sql);
