@@ -10,7 +10,13 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Properties;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import javax.sql.DataSource;
+
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -33,53 +39,45 @@ import com.mysql.jdbc.StringUtils;
  */
 public class SqlHelper {
 	private static Logger LocalMsg=LogManager.getLogger(SqlHelper.class);
-	private  String filePath,sqlDriverClassName,sqlUrl,sqlUserName,sqlPassword;
+	private  String filePath,sqlDriverClassName,sqlUrl,sqlUserName,sqlPassword,sqlMaxActive,sqlInitialSize,sqlMinIdle,sqlMaxIdle,sqlMinEvictableIdleTimeMillis,sqlTimeBetweenEvictionRunsMillis,sqlTestOnBorrow;
 	private static String defaultFileName="conf/custom/env/jobjdbc.properties";
-	Connection _CONN=null;
-	
-	public String getSqlDriverClassName() {
-		return sqlDriverClassName;
-	}
-
-	public void setSqlDriverClassName(String sqlDriverClassName) {
-		this.sqlDriverClassName = sqlDriverClassName;
-	}
-
-	public String getSqlUrl() {
-		return sqlUrl;
-	}
-
-	public void setSqlUrl(String sqlUrl) {
-		this.sqlUrl = sqlUrl;
-	}
-
-	public String getSqlUserName() {
-		return sqlUserName;
-	}
-
-	public void setSqlUserName(String sqlUserName) {
-		this.sqlUserName = sqlUserName;
-	}
-
-	public String getSqlPassword() {
-		return sqlPassword;
-	}
-
-	public void setSqlPassword(String sqlPassword) {
-		this.sqlPassword = sqlPassword;
-	}
+//	private Lock lock = new ReentrantLock();
+	private Connection _CONN=null;
+	private static BasicDataSource basicDataSource=null;
 
 	public SqlHelper(String fileName){
-
-		this.filePath=StringUtils.isEmptyOrWhitespaceOnly(fileName)==true?defaultFileName:fileName;
-		this.sqlDriverClassName=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.driverClassName");
-		this.sqlUrl=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.url");
-		this.sqlUserName=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.username");
-		this.sqlPassword=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.password");
+			if(basicDataSource==null){
+				this.filePath=StringUtils.isEmptyOrWhitespaceOnly(fileName)==true?defaultFileName:fileName;
+				this.sqlDriverClassName=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.driverClassName");
+				this.sqlUrl=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.url");
+				this.sqlUserName=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.username");
+				this.sqlPassword=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.password");
+				this.sqlMaxActive=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.maxactive");
+				this.sqlInitialSize=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.initialsize");
+				this.sqlMinIdle=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.minidle");
+				this.sqlMaxIdle=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.maxidle");
+				this.sqlMinEvictableIdleTimeMillis=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.minevictableidletimemillis");
+				this.sqlTimeBetweenEvictionRunsMillis=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.timebetweenevictionrunsmillis");
+				this.sqlTestOnBorrow=CommonsUtil.loadProperties(this.filePath).getProperty("jdbc.sql.testonborrow");
+				basicDataSource=new BasicDataSource();
+				basicDataSource.setDriverClassName(this.sqlDriverClassName);
+				basicDataSource.setUrl(this.sqlUrl);
+				basicDataSource.setUsername(this.sqlUserName);
+				basicDataSource.setPassword(this.sqlPassword);
+				basicDataSource.setMaxActive(Integer.parseInt(this.sqlMaxActive));
+				basicDataSource.setInitialSize(Integer.parseInt(this.sqlInitialSize));
+				basicDataSource.setMinIdle(Integer.parseInt(this.sqlMinIdle));
+				basicDataSource.setMaxIdle(Integer.parseInt(this.sqlMaxIdle));
+				basicDataSource.setMinEvictableIdleTimeMillis(Long.parseLong(this.sqlMinEvictableIdleTimeMillis));
+				basicDataSource.setTimeBetweenEvictionRunsMillis(Long.parseLong(this.sqlTimeBetweenEvictionRunsMillis));
+				basicDataSource.setTestOnBorrow(Boolean.parseBoolean(this.sqlTestOnBorrow));
+		}
+		
 	}
 	
-	private boolean getConnection() throws Exception{
+/*	private boolean getConnection() throws Exception{
 		if(_CONN!=null) return true;
+		if(lock.tryLock()){
 			try {
 				Class.forName(sqlDriverClassName);
 				_CONN=DriverManager.getConnection(sqlUrl, sqlUserName, sqlPassword);
@@ -88,13 +86,31 @@ public class SqlHelper {
 				LocalMsg.error("getConnection Exception:"+e.getMessage());
 				throw new Exception(e);
 			}
+		}
+		return true;
+	}*/
+	private boolean getConnection() throws Exception{
+		if(_CONN!=null) return true;
+		synchronized (this) {
+			try {
+				/*Class.forName(sqlDriverClassName);
+				_CONN=DriverManager.getConnection(sqlUrl, sqlUserName, sqlPassword);*/
+				_CONN=basicDataSource.getConnection();
+
+			} catch (SQLException e) {
+				LocalMsg.error("getConnection Exception:"+e.getMessage());
+				throw new Exception(e);
+			}
+		}
 		return true;
 	}
 	
 	private void closeConnection() throws SQLException{
 		try {
+			if(_CONN!=null){
 			_CONN.close();
 			_CONN=null;
+			}
 		} catch (SQLException e) {
 			LocalMsg.error("closeConnection Exception:"+e.getMessage());
 			throw new SQLException();
@@ -117,6 +133,8 @@ public class SqlHelper {
 			LocalMsg.error("getResultSet Exception:"+e.getMessage());
 			closeConnection();
 			throw  new Exception(e);
+		}finally {
+			
 		}
 		return resultSet;
 	}
