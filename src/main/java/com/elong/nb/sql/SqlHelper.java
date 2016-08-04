@@ -100,7 +100,7 @@ public class SqlHelper {
 		return true;
 	}
 	
-	private void closeConnection() throws SQLException{
+	public void closeConnection() throws SQLException{
 		try {
 			if(_CONN!=null){
 			_CONN.close();
@@ -123,14 +123,15 @@ public class SqlHelper {
 					}
 				}
 				resultSet=ps.executeQuery();
+				return resultSet;
 			}
 		} catch (Exception e) {
 			LocalMsg.error("getResultSet Exception:"+e.getMessage());
 			closeConnection();
 			throw  new Exception(e);
 		}finally {
-			if(resultSet!=null)resultSet.close();
-			if(_CONN!=null) closeConnection();
+		/*	if(resultSet!=null)resultSet.close();
+			if(_CONN!=null) closeConnection();*/
 		}
 		return resultSet;
 	}
