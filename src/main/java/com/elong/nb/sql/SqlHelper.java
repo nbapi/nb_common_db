@@ -135,7 +135,12 @@ public class SqlHelper {
 						ps.setObject(i+1, params[i]);
 					}
 				}
-				resultSet=ps.executeQuery();
+				//resultSet=ps.executeQuery();
+			boolean executResult=ps.execute();
+			if(executResult){
+				resultSet=ps.getResultSet();
+				//resultSet.close();
+			}
 				return resultSet;
 			}
 		} catch (Exception e) {
